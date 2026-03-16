@@ -21,6 +21,9 @@
 - **DirectX9를 사용한 “ToodeeAndTopdee” 모작**
 - **클라이언트 프레임워크 구현 및 별도의 프로젝트로 구성된 엔진 프로젝트를 DLL로 빌드하여 클라이언트에서 사용**
 - **개발 기간 : 2025. 05. 19 ~ 2025. 06. 15**
+담당 파트 : 플레이어 캐릭터 및 상호작용 오브젝트 시스템 구현
+Origin : https://github.com/JUSIN-LOOOOP/Toodee-And-Topdee
+
 
 <br/><br/>
 
