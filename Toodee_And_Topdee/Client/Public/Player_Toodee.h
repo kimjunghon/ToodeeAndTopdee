@@ -51,8 +51,6 @@ private:
 	_float		m_fIncreaseJumpPower = {};							// 한프레임당 증가할수 있는 점프파워
 	_float		m_fMaxIncreaseJumpPower = {};						// 점프 증가량 최대치
 	_float		m_fGravityPower = {};								// 중력
-	_bool		m_bOnThePortal = {};
-	_bool		m_bOnTheStorm = { false };
 	_bool		m_bInWater = { false };
 	_bool		m_bOutWater = { false };
 private:															   
@@ -68,7 +66,6 @@ private:
 	void Check_Collision_Dead(CGameObject* pGameObject);
 	void Check_Collision_Portal(CGameObject* pGameObject);
 	void Check_Collision_Key(CGameObject* pGameObject);
-	void Check_Collision_Storm(CGameObject* pGameObject);
 	void Check_Collision_Water(CGameObject* pGameObject);
 	void Check_Grounded();											// 지면 체크
 	void Check_OnGround(CGameObject* pGameObject);

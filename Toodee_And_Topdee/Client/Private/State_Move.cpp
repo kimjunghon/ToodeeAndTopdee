@@ -54,17 +54,8 @@ void CState_Move::Update(CPlayer* pPlayer, _float fTimeDelta)
 {
     UpdateAnim(fTimeDelta);
 
-    if (pPlayer->CanClear())
-    {
-        if (FAILED(pPlayer->Change_State(PLAYERSTATE::CLEAR)))
-            MSG_BOX(TEXT("Failed Change State : CLEAR"));
-    }
-
-    if (pPlayer->CanActive() == false)
-    {
-        if (FAILED(pPlayer->Change_State(PLAYERSTATE::STOP)))
-            MSG_BOX(TEXT("Failed Change State : STOP"));
-    }
+    if (Check_GlobalTransition(pPlayer))
+        return;
 
 
     if (m_fSoundTime + fTimeDelta > m_fSoundDelay)
@@ -80,13 +71,7 @@ void CState_Move::Update(CPlayer* pPlayer, _float fTimeDelta)
 
 void CState_Move::UpdateAnim(_float fTimeDelta)
 {
-    if (m_fAnimTime + fTimeDelta > m_fAnimDelay)
-    {
-        m_iCurrentAnimCount = (m_iCurrentAnimCount + 1) % m_iMaxAnimCount;
-        m_fAnimTime = 0.f;
-    }
-    else
-        m_fAnimTime += fTimeDelta;
+    Update_LoopAnim(fTimeDelta);
 }
 void CState_Move::Exit(CPlayer* pPlayer)
 {

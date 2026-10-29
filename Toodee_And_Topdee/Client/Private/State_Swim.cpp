@@ -72,14 +72,7 @@ void CState_Swim::Exit(CPlayer* pPlayer)
 
 void CState_Swim::UpdateAnim(_float fTimeDelta)
 {
-    if (m_fAnimTime + fTimeDelta > m_fAnimDelay)
-    {
-        m_iCurrentAnimCount = (m_iCurrentAnimCount + 1) % m_iMaxAnimCount;
-        m_fAnimTime = 0.f;
-
-    }
-    else
-        m_fAnimTime += fTimeDelta;
+    Update_LoopAnim(fTimeDelta);
 }
 
 CState_Swim* CState_Swim::Create(void* pArg)

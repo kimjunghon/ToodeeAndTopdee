@@ -34,7 +34,6 @@ private:
 	_float3 m_vCenterPosition = {};
 	_float m_fShakingPower = {};
 private:
-	_bool Compute_Near(const _float3& vOtherPosition);
 	_bool IsNearBlock(_float3 vPosition);
 
 	void Shaking();

@@ -195,9 +195,6 @@ void CPlayer_Topdee::Update(_float fTimeDelta)
 
 void CPlayer_Topdee::Late_Update(_float fTimeDelta)
 {
-	if (m_eCurrentState == PLAYERSTATE::DEAD)
-		int a = 10;
-
 	m_iCurrentAnimCount = m_pCurrentState->GetAnimCount() + ( ENUM_CLASS(m_eCurrentMoveDir) * m_pCurrentState->GetMaxAnimCount());
 
 
@@ -341,10 +338,7 @@ void CPlayer_Topdee::Interaction()
 			m_pGameInstance->StopSound(CHANNELID::SOUND_PLAYER);
 			m_pGameInstance->PlayAudio(TEXT("BlockDetach.wav"), CHANNELID::SOUND_PLAYER, 0.5f);
 
-			m_pAttachBlock->Request_Change_State(BLOCKSTATE::DETACH);
-			m_pAttachBlock->Detach(m_vDetachPosition, 20.f);
-			m_pAttachBlock = nullptr;
-			m_bIsAttach = false;
+			Detach_Block();
 		}
 		else
 		{	
@@ -409,7 +403,7 @@ _float3 CPlayer_Topdee::ComputeTileOutlinePosition()
 
 _bool CPlayer_Topdee::IsAttachSparkBlock( )
 {
-	if (m_bIsAttach && reinterpret_cast<CGameObject*>(m_pAttachBlock)->CompareName(TEXT("Interaction_Block_Spark")))
+	if (m_bIsAttach && static_cast<CGameObject*>(m_pAttachBlock)->CompareName(TEXT("Interaction_Block_Spark")))
 		return true;
 
 	return false;
@@ -433,10 +427,7 @@ void CPlayer_Topdee::Check_Dimension()
 			
 			if (true == m_bCanDetach)
 			{
-				m_pAttachBlock->Request_Change_State(BLOCKSTATE::DETACH);
-				m_pAttachBlock->Detach(m_vDetachPosition, 20.f);
-				m_pAttachBlock = nullptr;
-				m_bIsAttach = false;
+				Detach_Block();
 			}
 		}
 	}
@@ -479,21 +470,23 @@ void CPlayer_Topdee::Change_MoveDir(_uint iInputData)
 
 MOVEDIRECTION CPlayer_Topdee::ComputeMoveDirection(_uint iInputData)
 {
-	if(  ((iInputData & ENUM_CLASS(KEYINPUT::KEY_UP)) && (iInputData & ENUM_CLASS(KEYINPUT::KEY_RIGHT))) ||
-		((iInputData & ENUM_CLASS(KEYINPUT::KEY_UP)) && (iInputData & ENUM_CLASS(KEYINPUT::KEY_LEFT)))   )
+	const _bool bUp = (iInputData & ENUM_CLASS(KEYINPUT::KEY_UP)) != 0;
+	const _bool bDown = (iInputData & ENUM_CLASS(KEYINPUT::KEY_DOWN)) != 0;
+	const _bool bSide = (iInputData & (ENUM_CLASS(KEYINPUT::KEY_LEFT) | ENUM_CLASS(KEYINPUT::KEY_RIGHT))) != 0;
+
+	if (bUp && bSide)
 		return MOVEDIRECTION::DIAGONAL_UP;
 
-	if(   ((iInputData & ENUM_CLASS(KEYINPUT::KEY_DOWN)) && (iInputData & ENUM_CLASS(KEYINPUT::KEY_RIGHT))) ||
-		((iInputData & ENUM_CLASS(KEYINPUT::KEY_DOWN)) && (iInputData & ENUM_CLASS(KEYINPUT::KEY_LEFT))))
+	if (bDown && bSide)
 		return MOVEDIRECTION::DIAGONAL_DOWN;
 
-	if (iInputData & ENUM_CLASS(KEYINPUT::KEY_UP))
+	if (bUp)
 		return MOVEDIRECTION::UP;
 
-	if (iInputData & ENUM_CLASS(KEYINPUT::KEY_DOWN))
+	if (bDown)
 		return MOVEDIRECTION::DOWN;
 
-	if ((iInputData & ENUM_CLASS(KEYINPUT::KEY_LEFT)) || (iInputData & ENUM_CLASS(KEYINPUT::KEY_RIGHT)))
+	if (bSide)
 		return MOVEDIRECTION::TRANSVERSE;
 
 	return m_eCurrentMoveDir;
@@ -527,10 +520,10 @@ void CPlayer_Topdee::MoveToTileCenter(_float fTimeDelta)
 void CPlayer_Topdee::Check_AttachCollisionState()
 {
 	_float3 vPosition = m_pTransformCom->Get_State(STATE::POSITION);
-	vPosition = { vPosition.x, vPosition.y, vPosition.z };
 	m_pActionCheckTransformCom->Set_State(STATE::POSITION, vPosition);
 
 	m_fMaxDot = -2.f;
+	m_pFocuseBlock = nullptr;
 
 	m_pActionCheckColliderCom->Collision_On();
 
@@ -541,7 +534,6 @@ void CPlayer_Topdee::Check_AttachCollisionState()
 		vector<CGameObject*>* Overlaps = { nullptr };
 		m_pActionCheckColliderCom->GetOverlapAll(Overlaps);
 
-		_float3 vPosition = m_pTransformCom->Get_State(STATE::POSITION);
 		_float3 vLook = Compute_Look();
 
 		for(auto iter : *Overlaps)
@@ -549,6 +541,8 @@ void CPlayer_Topdee::Check_AttachCollisionState()
 			if ((iter->Get_Name().find(TEXT("Interaction")) != string::npos))
 			{
 				CInteractionBlock* pBlock = dynamic_cast<CInteractionBlock*>(iter);
+				if (pBlock == nullptr)
+					continue;
 
 				_float fDot = pBlock->ComputeDirDotLook(vPosition, vLook);
 
@@ -625,7 +619,6 @@ void CPlayer_Topdee::Check_DetachCollisionState()
 		vector<CGameObject*>* Overlaps = { nullptr };
 		m_pActionCheckColliderCom->GetOverlapAll(Overlaps);
 
-		_float3 vPosition = m_pTransformCom->Get_State(STATE::POSITION);
 		_float3 vLook = Compute_Look();
 
 		for (auto iter : *Overlaps)
@@ -633,6 +626,8 @@ void CPlayer_Topdee::Check_DetachCollisionState()
 			if ((iter->Get_Name().find(TEXT("Block")) != string::npos))
 			{
 				CBlock* pBlock = dynamic_cast<CBlock*>(iter);
+				if (pBlock == nullptr)
+					continue;
 
 				_float fDot = pBlock->ComputeDirDotLook(vPosition, vLook);
 
@@ -654,6 +649,8 @@ void CPlayer_Topdee::Check_DetachCollisionState()
 			else if (iter->Get_Name().find(TEXT("Wall")) != string::npos)
 			{
 				CColliderMap_Object* pWall = dynamic_cast<CColliderMap_Object*>(iter);
+				if (pWall == nullptr)
+					continue;
 
 				_float fResult = static_cast<_float>(pWall->IsOverlappingWall(vPosition, vLook));
 
@@ -697,6 +694,14 @@ void CPlayer_Topdee::Check_DetachCollisionState()
 	m_bCanDetach = false;
 }
 
+void CPlayer_Topdee::Detach_Block()
+{
+	m_pAttachBlock->Request_Change_State(BLOCKSTATE::DETACH);
+	m_pAttachBlock->Detach(m_vDetachPosition, 20.f);
+	m_pAttachBlock = nullptr;
+	m_bIsAttach = false;
+}
+
 _float3 CPlayer_Topdee::Compute_Detach_Position(DETACHDIRECTION eDir)
 {
 	_float3 vCenter = ComputeTileCenter();
@@ -709,16 +714,16 @@ _float3 CPlayer_Topdee::Compute_Detach_Position(DETACHDIRECTION eDir)
 	switch (eDir)
 	{
 	case DETACHDIRECTION::LEFT:
-		fDistanceX = -2.f;
+		fDistanceX = -TILE_SIZE;
 		break;
 	case DETACHDIRECTION::UP:
-		fDistanceZ = 2.f;
+		fDistanceZ = TILE_SIZE;
 		break;
 	case DETACHDIRECTION::RIGHT:
-		fDistanceX = 2.f;
+		fDistanceX = TILE_SIZE;
 		break;
 	case DETACHDIRECTION::DOWN:
-		fDistanceZ = -2.f;
+		fDistanceZ = -TILE_SIZE;
 		break;
 	}
 
@@ -937,29 +942,19 @@ void CPlayer_Topdee::Check_Collision()
 		vector<CGameObject*>* Overlaps = { nullptr };
 		if (false == m_pColliderCom->GetOverlapAll(Overlaps))
 			return;
+
+		for (auto iter : *Overlaps)
 		{
-			for (auto iter : *Overlaps)
-			{
-				Check_Collision_Portal(iter);
-				Check_Collision_Dead(iter);
-				Check_Collision_InteractionBlock(iter);
-				Check_Collision_Key(iter);
-			}
+			Check_Collision_Portal(iter);
+			Check_Collision_Dead(iter);
+			Check_Collision_InteractionBlock(iter);
+			Check_Collision_Key(iter);
 		}
 
 		Check_Collision_PlayerState();
 	}
-	else
-	{
-		if (m_bEnterPortal)
-		{ 
-			m_bEnterPortal = false;
-			EXITPORTALEVENT Event;
-			Event.pPlayer = this;
-			m_pGameInstance->Publish(m_iPlayLevel, EVENT_KEY::EXIT_PORTAL, Event);
-		}
-	}
 
+	Update_PortalOverlap(m_iPlayLevel);
 }
 
 void CPlayer_Topdee::Check_Collision_PlayerState()
@@ -992,6 +987,9 @@ void CPlayer_Topdee::Check_Collision_InteractionBlock(CGameObject* pGameObject)
 	if(pGameObject->Get_Name().find(TEXT("Interaction")) != string::npos)
 	{
 		CInteractionBlock* pBlock = dynamic_cast<CInteractionBlock*>(pGameObject);
+		if (pBlock == nullptr)
+			return;
+
 		if (false == pBlock->IsPush() && false == pBlock->IsFall())
 		{
 			pBlock->Request_Change_State(BLOCKSTATE::PUSH);
@@ -1006,12 +1004,7 @@ void CPlayer_Topdee::Check_Collision_InteractionBlock(CGameObject* pGameObject)
 void CPlayer_Topdee::Check_Collision_Portal(CGameObject* pGameObject)
 {
 	if (pGameObject->Get_Name().find(TEXT("Portal")) != string::npos)
-	{
-		m_bEnterPortal = true;
-		ENTERPORTALEVENT Event;
-		Event.pPlayer = this;
-		m_pGameInstance->Publish(m_iPlayLevel, EVENT_KEY::ENTER_PORTAL, Event);
-	}
+		m_bTouchPortal = true;
 }
 
 void CPlayer_Topdee::Check_Collision_Key(CGameObject* pGameObject)
@@ -1019,6 +1012,9 @@ void CPlayer_Topdee::Check_Collision_Key(CGameObject* pGameObject)
 	if (pGameObject->Get_Name().find(TEXT("Key")) != string::npos)
 	{
 		CKey* pKey = dynamic_cast<CKey*>(pGameObject);
+		if (pKey == nullptr)
+			return;
+
 		pKey->Get_Key();
 		GETKEYEVENT Event;
 		m_pGameInstance->Publish(m_iPlayLevel, EVENT_KEY::GET_KEY, Event);

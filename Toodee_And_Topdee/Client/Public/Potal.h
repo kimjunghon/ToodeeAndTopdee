@@ -32,7 +32,7 @@ public:
 
 private:
 	_uint		m_iPlayLevel = {};
-	//Can Clear üũ
+	// Can Clear 체크용 : 포탈에 들어온 플레이어 목록
 	unordered_set<CGameObject*> m_OverlapSubjects;
 
 	CTransform* m_pTransformCom = { nullptr };

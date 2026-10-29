@@ -44,7 +44,6 @@ private:
 
 	DIMENSION m_eCurrentDimension = {};
 
-	_bool	m_bFill = {};
 	_float	m_fFillHeight = {};
 	_float	m_fCurrentFillHeight = {};
 	_float3 m_vSinkPos = {};

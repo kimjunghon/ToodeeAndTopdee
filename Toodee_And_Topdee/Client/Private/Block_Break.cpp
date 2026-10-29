@@ -90,22 +90,11 @@ void CBlock_Break::StepOn(const BLOCKBREAKEVENT& Event)
 
 		m_bIsStepOn = true;
 		m_vCenterPosition = m_pTransformCom->Get_State(STATE::POSITION);
-		BLOCKBREAKEVENT Event;
-		Event.vPosition = m_vCenterPosition;
+		BLOCKBREAKEVENT NextEvent;
+		NextEvent.vPosition = m_vCenterPosition;
 		
-		m_pGameInstance->Publish(m_iPlayLevel, EVENT_KEY::BLOCK_BREAK, Event);
+		m_pGameInstance->Publish(m_iPlayLevel, EVENT_KEY::BLOCK_BREAK, NextEvent);
 	}
-}
-
-_bool CBlock_Break::Compute_Near(const _float3& vOtherPosition)
-{
-	_float3 vPosition = m_pTransformCom->Get_State(STATE::POSITION);
-
-	_float3 vDistance = vPosition - vOtherPosition;
-
-	_float fLength = D3DXVec3Length(&vDistance);
-
-	return fLength <= 2.2f; //���� ���� 0.5f
 }
 
 _bool CBlock_Break::IsNearBlock(_float3 vPosition)

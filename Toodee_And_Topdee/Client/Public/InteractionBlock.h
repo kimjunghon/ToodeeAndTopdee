@@ -94,7 +94,6 @@ protected:
 	/* Collision */
 	void CheckCollisionTopdeeState();												// 충돌 쳌
 
-	_bool IsOnHole();													// Topdee 일때 밑이 구멍인지 확인?
 
 	virtual HRESULT	Ready_State();
 

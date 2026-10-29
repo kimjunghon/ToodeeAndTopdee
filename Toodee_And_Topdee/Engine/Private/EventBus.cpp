@@ -14,8 +14,8 @@ HRESULT CEventBus::Initialize(_uint iNumLevels)
 
 void CEventBus::Clear(_uint iClearLevel)
 {
-    for (auto& Pair : m_Subscribers[iClearLevel])
-        Pair.second.clear();
+    if (iClearLevel >= m_iNumLevels)
+        return;
 
     m_Subscribers[iClearLevel].clear();
 }
@@ -35,14 +35,6 @@ CEventBus* CEventBus::Create(_uint iNumLevels)
 void CEventBus::Free()
 {
     __super::Free();
-
-    for(_uint i=0; i<m_iNumLevels; i++)
-    {
-        for (auto& Pair : m_Subscribers[i])
-            Pair.second.clear();
-
-        m_Subscribers[i].clear();
-    }
 
     Safe_Delete_Array(m_Subscribers);
 }

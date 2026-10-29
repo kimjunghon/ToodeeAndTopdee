@@ -25,7 +25,8 @@ HRESULT CBlock_Fall::Initialize(void* pArg)
 		return E_FAIL;
 
 
-	__super::Ready_State();
+	if (FAILED(__super::Ready_State()))
+		return E_FAIL;
 
 	__super::SetUp_BlockInfo(pArg);
 
@@ -113,8 +114,8 @@ _float3 CBlock_Fall::ComputeTileCenter()
 	_float fCenterX = {};
 	_float fCenterZ = {};
 
-	fCenterX = static_cast<_float>(iCountX) * TILE_SIZE + static_cast<_float>(TILE_SIZE * 0.5);
-	fCenterZ = static_cast<_float>(iCountZ) * TILE_SIZE + static_cast<_float>(TILE_SIZE * 0.5);
+	fCenterX = static_cast<_float>(iCountX) * TILE_SIZE + TILE_SIZE * 0.5f;
+	fCenterZ = static_cast<_float>(iCountZ) * TILE_SIZE + TILE_SIZE * 0.5f;
 
 	m_vCurrentTileCenter = { fCenterX, vPosition.y, fCenterZ };
 

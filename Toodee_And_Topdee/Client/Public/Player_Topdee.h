@@ -95,6 +95,7 @@ private:
 
 	/* Detach */
 	void Check_DetachCollisionState();
+	void Detach_Block();										// 들고 있는 Block 내려놓기
 	_float3 Compute_Detach_Position(DETACHDIRECTION eDir);
 
 	HRESULT Ready_Components();

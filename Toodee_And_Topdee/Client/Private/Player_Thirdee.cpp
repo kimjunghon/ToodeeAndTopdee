@@ -237,16 +237,16 @@ HRESULT CPlayer_Thirdee::Change_State(PLAYERSTATE eNewState)
     if (m_eCurrentState == eNewState)
         return S_OK;
 
+    auto iterState = m_States.find(eNewState);
+    if (iterState == m_States.end())
+        return E_FAIL;
+
     if (m_pCurrentState)
     {
         m_pCurrentState->Exit(this);
         
         Safe_Release(m_pCurrentState);
     }
-
-    auto iterState = m_States.find(eNewState);
-    if (iterState == m_States.end())
-        return E_FAIL;
 
     m_pCurrentState = iterState->second;
     m_eCurrentState = eNewState;
@@ -401,7 +401,12 @@ HRESULT CPlayer_Thirdee::Add_State(PLAYERSTATE eKeyState)
     case PLAYERSTATE::CLEAR:
         pInstance = CThirdee_Clear::Create(eKeyState);
         break;
+    default:
+        break;
     }
+
+    if (pInstance == nullptr)
+        return E_FAIL;
 
     m_States.emplace(eKeyState, pInstance);
 

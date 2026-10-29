@@ -31,8 +31,11 @@ HRESULT CPotal::Initialize(void* pArg)
 
 	m_iPlayLevel = m_pGameInstance->Get_NextLevelID();
 
-	Ready_Components();
-	Ready_SubscribeEvent(m_iPlayLevel);
+	if (FAILED(Ready_Components()))
+		return E_FAIL;
+
+	if (FAILED(Ready_SubscribeEvent(m_iPlayLevel)))
+		return E_FAIL;
 
 	m_iCurrentAnimCount = 0;
 	m_fAnimTime = 0.f;
@@ -62,7 +65,6 @@ void CPotal::Priority_Update(_float fTimeDelta)
 
 void CPotal::Update(_float fTimeDelta)
 {
-	// �÷��̾� �浹 On -> Clear
 }
 
 void CPotal::Late_Update(_float fTimeDelta)
@@ -114,10 +116,10 @@ void CPotal::BeginOverlapPlayer(const ENTERPORTALEVENT& Event)
 
 	if (m_OverlapSubjects.size() >= 2) // 포탈에 2명 다 들어왔다면
 	{
-		CANCLEAREVENT Event;
-		Event.vPosition = m_pTransformCom->Get_State(STATE::POSITION);
+		CANCLEAREVENT ClearEvent;
+		ClearEvent.vPosition = m_pTransformCom->Get_State(STATE::POSITION);
 
-		m_pGameInstance->Publish(m_iPlayLevel, EVENT_KEY::CAN_CLEAR, Event);
+		m_pGameInstance->Publish(m_iPlayLevel, EVENT_KEY::CAN_CLEAR, ClearEvent);
 
 
 	}
@@ -128,13 +130,11 @@ void CPotal::EndOverlapPlayer(const EXITPORTALEVENT& Event)
 	if (nullptr == Event.pPlayer)
 		return;
 
+	if (0 == m_OverlapSubjects.erase(Event.pPlayer))
+		return;
+
 	m_pGameInstance->StopSound(CHANNELID::SOUND_EFFECT);
 	m_pGameInstance->PlayAudio(TEXT("ExitPortal.wav"), CHANNELID::SOUND_EFFECT, 0.5f);
-
-	_uint iErase = m_OverlapSubjects.erase(Event.pPlayer);
-
-	if (iErase == 0)
-		return;
 }
 
 HRESULT CPotal::Ready_Components()
@@ -158,7 +158,7 @@ HRESULT CPotal::Ready_Components()
 
 	/* For.Com_Collider */
 	CCollider::COLLIDER_DESC  ColliderDesc{};
-	ColliderDesc.pOwner = reinterpret_cast<CGameObject*>(this);
+	ColliderDesc.pOwner = this;
 	ColliderDesc.pTransform = m_pTransformCom;
 
 	ColliderDesc.vColliderPosion = m_pTransformCom->Get_State(STATE::POSITION);

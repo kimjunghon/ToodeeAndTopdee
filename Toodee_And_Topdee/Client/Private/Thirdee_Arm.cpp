@@ -22,7 +22,8 @@ HRESULT CThirdee_Arm::Initialize(void* pArg)
 	if (nullptr == pArg)
 		return E_FAIL;
 
-	__super::Initialize_Part(pArg);
+	if (FAILED(__super::Initialize_Part(pArg)))
+		return E_FAIL;
 
 	m_fRadianPerSec = D3DXToRadian(45.f);
 	m_fCurrentAnimRadian = 0.f;

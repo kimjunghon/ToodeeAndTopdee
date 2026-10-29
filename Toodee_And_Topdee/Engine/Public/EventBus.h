@@ -19,14 +19,24 @@ public:
 public:
     template <typename EventType>
     void Subscribe(_uint iSubscribeLevel,EVENT_KEY eEventKey, function<void(const EventType&)> Callback) {
-        auto Wrapper = [Callback](const CEvent& Event) {
+        if (iSubscribeLevel >= m_iNumLevels)
+            return;
+
+        auto Wrapper = [Callback = move(Callback)](const CEvent& Event) {
             Callback(static_cast<const EventType&>(Event));
             };
-        m_Subscribers[iSubscribeLevel][eEventKey].push_back(Wrapper);
+        m_Subscribers[iSubscribeLevel][eEventKey].push_back(move(Wrapper));
     }
 
     void Publish(_uint iSubscribeLevel, EVENT_KEY eEventKey, const CEvent& Event) {
-        for (auto CallBack : m_Subscribers[iSubscribeLevel][eEventKey]) {
+        if (iSubscribeLevel >= m_iNumLevels)
+            return;
+
+        auto iter = m_Subscribers[iSubscribeLevel].find(eEventKey);
+        if (iter == m_Subscribers[iSubscribeLevel].end())
+            return;
+
+        for (auto CallBack : iter->second) {
             CallBack(Event);
         }
     }

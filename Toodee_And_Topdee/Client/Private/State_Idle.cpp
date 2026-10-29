@@ -51,29 +51,12 @@ void CState_Idle::Update(CPlayer* pPlayer, _float fTimeDelta)
 {
     UpdateAnim(fTimeDelta);
 
-    if (pPlayer->CanClear())
-    {
-        if (FAILED(pPlayer->Change_State(PLAYERSTATE::CLEAR)))
-            MSG_BOX(TEXT("Failed Change State : CLEAR"));
-    }
-
-    if(pPlayer->CanActive() == false)
-    {
-        if (FAILED(pPlayer->Change_State(PLAYERSTATE::STOP)))
-            MSG_BOX(TEXT("Failed Change State : STOP"));
-    }
+    Check_GlobalTransition(pPlayer);
 }
 
 void CState_Idle::UpdateAnim(_float fTimeDelta)
 {
-    if (m_fAnimTime + fTimeDelta > m_fAnimDelay)
-    {
-        m_iCurrentAnimCount = (m_iCurrentAnimCount + 1) % m_iMaxAnimCount;
-        m_fAnimTime = 0.f;
-        
-    }
-    else
-        m_fAnimTime += fTimeDelta;
+    Update_LoopAnim(fTimeDelta);
 }
 
 void CState_Idle::Exit(CPlayer* pPlayer)

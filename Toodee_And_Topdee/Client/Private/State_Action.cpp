@@ -62,33 +62,12 @@ void CState_Action::Update(CPlayer* pPlayer, _float fTimeDelta)
             MSG_BOX(TEXT("Failed Change State : IDLE"));
     }
 
-    if (pPlayer->CanClear())
-    {
-        if(FAILED(pPlayer->Change_State(PLAYERSTATE::CLEAR)))
-            MSG_BOX(TEXT("Failed Change State : CLEAR"));
-
-        return;
-    }
-
-    if (pPlayer->CanActive() == false)
-    {
-        if (FAILED(pPlayer->Change_State(PLAYERSTATE::STOP)))
-            MSG_BOX(TEXT("Failed Change State : STOP"));
-    }
+    Check_GlobalTransition(pPlayer);
 }
 
 void CState_Action::UpdateAnim(_float fTimeDelta)
 {
-    if (m_iCurrentAnimCount >= m_iMaxAnimCount - 1)
-        return;
-
-    if (m_fAnimTime + fTimeDelta > m_fAnimDelay)
-    {
-        m_iCurrentAnimCount++;
-        m_fAnimTime = 0.f;
-    }
-    else
-        m_fAnimTime += fTimeDelta;
+    Update_OnceAnim(fTimeDelta);
 }
 
 void CState_Action::Exit(CPlayer* pPlayer)

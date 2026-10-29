@@ -124,8 +124,13 @@ HRESULT CPlayer::Add_State(PLAYERSTATE eKeyState, void* pArg)
 	case PLAYERSTATE::DEAD:
 		pInstance = CState_Dead::Create(pArg);
 		break;
-			
+	default:
+		break;
 	}
+
+	// 등록되지 않은 상태이거나 생성에 실패하면 맵에 넣지 않음
+	if (pInstance == nullptr)
+		return E_FAIL;
 
 	m_States.emplace(eKeyState, pInstance);
 
@@ -338,6 +343,32 @@ void CPlayer::Compute_AttributeShadow()
 		{
 			m_fCurAngle = m_fTopdeeAngle; m_fCurLightY = m_fTopdeeLightDirY;
 		}
+	}
+}
+
+void CPlayer::Update_PortalOverlap(_uint iPlayLevel)
+{
+	// 시점 전환으로 비활성화된 프레임은 충돌 정보가 없으므로 포탈 상태를 그대로 유지
+	if (false == m_bCanActive || m_bTouchPortal == m_bEnterPortal)
+	{
+		m_bTouchPortal = false;
+		return;
+	}
+
+	m_bEnterPortal = m_bTouchPortal;
+	m_bTouchPortal = false;
+
+	if (m_bEnterPortal)
+	{
+		ENTERPORTALEVENT Event;
+		Event.pPlayer = this;
+		m_pGameInstance->Publish(iPlayLevel, EVENT_KEY::ENTER_PORTAL, Event);
+	}
+	else
+	{
+		EXITPORTALEVENT Event;
+		Event.pPlayer = this;
+		m_pGameInstance->Publish(iPlayLevel, EVENT_KEY::EXIT_PORTAL, Event);
 	}
 }
 

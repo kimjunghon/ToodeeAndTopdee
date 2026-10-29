@@ -23,6 +23,11 @@ public:
 
 	void Request_ChangeState(CPlayer* pPlayer, PLAYERSTATE eState);									// Player에서 State 변경 요청
 
+protected:
+	_bool Check_GlobalTransition(CPlayer* pPlayer);
+	void Update_LoopAnim(_float fTimeDelta);
+	void Update_OnceAnim(_float fTimeDelta);
+
 public:
 	PLAYERSTATE GetTextureKey() {																	
 		return m_eState;

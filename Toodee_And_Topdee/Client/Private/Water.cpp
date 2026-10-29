@@ -21,7 +21,7 @@ HRESULT CWater::Initialize_Prototype()
 HRESULT CWater::Initialize(void* pArg)
 {
 	if (nullptr == pArg)
-		return E_FAIL;;
+		return E_FAIL;
 
 	WATER_DESC* pDesc = static_cast<WATER_DESC*>(pArg);
 
@@ -132,7 +132,6 @@ HRESULT CWater::Render()
 
 void CWater::FillWater(_float fFillHeight)
 {
-	m_bFill = true;
 	m_fFillHeight = fFillHeight;
 }
 

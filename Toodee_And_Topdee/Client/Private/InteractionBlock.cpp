@@ -58,6 +58,10 @@ HRESULT CInteractionBlock::Change_State(BLOCKSTATE eNewState)
 	if (m_eCurrentState == eNewState)
 		return S_OK;
 
+	auto iterState = m_States.find(eNewState);
+	if (iterState == m_States.end())
+		return E_FAIL;
+
 	if (m_pCurrentState)
 	{
 		m_pCurrentState->Exit(this);
@@ -66,10 +70,6 @@ HRESULT CInteractionBlock::Change_State(BLOCKSTATE eNewState)
 	}
 
 	Clear_StateParameter();
-
-	auto iterState = m_States.find(eNewState);
-	if (iterState == m_States.end())
-		return E_FAIL;
 
 	m_pCurrentState = iterState->second;
 	m_eCurrentState = eNewState;
@@ -172,7 +172,12 @@ HRESULT CInteractionBlock::Add_State(BLOCKSTATE eKeyState)
 	case BLOCKSTATE::DETACH:
 		pInstance = CBlockState_Detach::Create(BLOCKSTATE::DETACH);
 		break;
+	default:
+		break;
 	}
+
+	if (pInstance == nullptr)
+		return E_FAIL;
 
 	m_States.emplace(eKeyState, pInstance);
 
@@ -206,9 +211,9 @@ void CInteractionBlock::Update_PushState(CInteractionBlock* pBlock)
 
 	if (pBlock->m_pPushBlock->IsBlock())
 	{
-		m_bBlock = true;
+		pBlock->m_bBlock = true;
 		pBlock->Request_Change_State(BLOCKSTATE::STOP);
-		pBlock->m_pTransformCom->Set_State(STATE::POSITION, m_vPrevPosition);
+		pBlock->m_pTransformCom->Set_State(STATE::POSITION, pBlock->m_vPrevPosition);
 	}
 }
 
@@ -228,6 +233,8 @@ void CInteractionBlock::CheckCollisionTopdeeState()
 					if (iter->Get_Name().find(TEXT("Interaction")) != wstring::npos)
 					{
 						CInteractionBlock* pBlock = dynamic_cast<CInteractionBlock*>(iter);
+						if (pBlock == nullptr)
+							continue;
 
 						if (false == pBlock->IsPush() && false == pBlock->IsBlock() && false == pBlock->IsFall())
 						{
@@ -254,6 +261,9 @@ void CInteractionBlock::CheckCollisionTopdeeState()
 					if (iter->Get_Name().find(TEXT("Hole")) != wstring::npos)
 					{
 						CHole* pHole = dynamic_cast<CHole*>(iter);
+						if (pHole == nullptr)
+							continue;
+
 						pHole->Set_Dead();
 						m_fTotalFallHeight = 0.f;
 						m_bFalling = true;
@@ -262,6 +272,9 @@ void CInteractionBlock::CheckCollisionTopdeeState()
 					if (iter->Get_Name().find(TEXT("Sink")) != wstring::npos && nullptr == m_pBlockSink)
 					{
 						m_pBlockSink = dynamic_cast<CSink*>(iter);
+						if (m_pBlockSink == nullptr)
+							continue;
+
 						m_pBlockSink->OnBlock();
 						Safe_AddRef(m_pBlockSink);
 
@@ -287,11 +300,6 @@ void CInteractionBlock::CheckCollisionTopdeeState()
 			m_pGameInstance->Publish(m_pGameInstance->Get_CurrentLevelID(), EVENT_KEY::SINK_OPEN, Event);
 		}
 	}
-}
-
-_bool CInteractionBlock::IsOnHole()
-{
-	return _bool();
 }
 
 HRESULT CInteractionBlock::Ready_State()
@@ -398,7 +406,7 @@ void CInteractionBlock::FallIntoHole(_float fTimeDelta)
 
 	if (m_fTotalFallHeight >= m_fMaxFallHeight)
 	{
-		fGravity = m_fTotalFallHeight - m_fMaxFallHeight;
+		fGravity -= m_fTotalFallHeight - m_fMaxFallHeight;
 		m_pColliderCom->Collision_Off();
 		m_bFalling = false;
 		m_bFallinHole = true;

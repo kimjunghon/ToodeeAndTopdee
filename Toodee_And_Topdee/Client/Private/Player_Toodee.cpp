@@ -619,7 +619,6 @@ void CPlayer_Toodee::Check_Collision()
 
     if (m_pColliderCom->OnCollisionStay() || m_pColliderCom->OnCollisionEnter())
     {
-
         vector<CGameObject*>* Overlaps = { nullptr };
         if (false == m_pColliderCom->GetOverlapAll(Overlaps))
             return;
@@ -634,16 +633,8 @@ void CPlayer_Toodee::Check_Collision()
 
         Check_Collision_PlayerState();
     }
-    else
-    {
-        if (m_bEnterPortal)
-        {
-            m_bEnterPortal = false;
-            EXITPORTALEVENT Event;
-            Event.pPlayer = this;
-            m_pGameInstance->Publish(m_iPlayLevel, EVENT_KEY::EXIT_PORTAL, Event);
-        }
-    }
+
+    Update_PortalOverlap(m_iPlayLevel);
 }
 
 void CPlayer_Toodee::Check_Collision_PlayerState()
@@ -703,37 +694,24 @@ void CPlayer_Toodee::Check_Collision_Dead(CGameObject* pGameObject)
 void CPlayer_Toodee::Check_Collision_Portal(CGameObject* pGameObject)
 {
     if (pGameObject->Get_Name().find(TEXT("Portal")) != string::npos)
-    {
-        m_bEnterPortal = true;
-        m_bOnThePortal = true;
-        ENTERPORTALEVENT Event;
-        Event.pPlayer = this;
-        m_pGameInstance->Publish(m_iPlayLevel, EVENT_KEY::ENTER_PORTAL, Event);
-    }
-    else
-        m_bOnThePortal = false;
+        m_bTouchPortal = true;
 }
 
 void CPlayer_Toodee::Check_Collision_Key(CGameObject* pGameObject)
 {
     if (pGameObject->Get_Name().find(TEXT("Key")) != string::npos)
     {
+        // 이름에 "Key"가 들어간 다른 오브젝트일 수 있으므로 형 확인 후 처리
         CKey* pKey = dynamic_cast<CKey*>(pGameObject);
+        if (nullptr == pKey)
+            return;
+
         pKey->Get_Key();
         GETKEYEVENT Event;
         m_pGameInstance->Publish(m_iPlayLevel, EVENT_KEY::GET_KEY, Event);
 
 
     }
-}
-
-void CPlayer_Toodee::Check_Collision_Storm(CGameObject* pGameObject)
-{
-    if (pGameObject->Get_Name().find(TEXT("Storm")) != string::npos)
-        m_bOnTheStorm = true;
-    else
-        m_bOnTheStorm = false;
-    
 }
 
 void CPlayer_Toodee::Check_Collision_Water(CGameObject* pGameObject)
@@ -773,7 +751,6 @@ void CPlayer_Toodee::Check_Grounded()
             Check_Collision_BlockBreak(iter);
             Check_Collision_Dead(iter);
             Check_Collision_Key(iter);
-            Check_Collision_Storm(iter);
         }
 
     }

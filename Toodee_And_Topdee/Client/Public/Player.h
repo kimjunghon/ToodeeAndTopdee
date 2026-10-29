@@ -69,6 +69,7 @@ protected:
 	_uint ComputeStopAnimCount(PLAYERSTATE eCurrentState);						// Stop AnimCount 갱신
 
 	
+	void Update_PortalOverlap(_uint iPlayLevel);									// 포탈 진입 / 퇴장이 바뀐 프레임에만 이벤트 발행
 	virtual void Check_Dimension();														// Toodee Topdee Check
 	HRESULT Begin_Shader();
 	HRESULT End_Shader();
@@ -102,7 +103,8 @@ protected:
 	
 	_uint							m_iCurrentAnimCount = {};													//현재 애니메이션 Index
 
-	_bool							m_bEnterPortal = {};
+	_bool							m_bEnterPortal = {};														// 포탈 안에 있는 상태인지 (이벤트 발행 기준)
+	_bool							m_bTouchPortal = {};														// 이번 프레임에 포탈과 겹쳤는지
 	_bool							m_bCanClear = {};															// 클리어 조건 달성 여부 ( 포탈에 2명 )
 	_bool							m_bMoveToPotal = {};														// Clear 애니메이션 Start Position Move Check
 	_bool							m_bClearAnimStart = {};														// Clear 애니메이션 트리거 

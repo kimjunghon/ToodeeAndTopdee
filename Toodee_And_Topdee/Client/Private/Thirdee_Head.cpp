@@ -21,7 +21,8 @@ HRESULT CThirdee_Head::Initialize(void* pArg)
 	if (nullptr == pArg)
 		return E_FAIL;
 
-	__super::Initialize_Part(pArg);
+	if (FAILED(__super::Initialize_Part(pArg)))
+		return E_FAIL;
 
 	if (FAILED(Ready_Hair()))
 		return E_FAIL;

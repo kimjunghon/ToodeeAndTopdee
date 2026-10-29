@@ -40,16 +40,7 @@ void CState_Clear::Exit(CPlayer* pPlayer)
 
 void CState_Clear::UpdateAnim(_float fTimeDelta)
 {
-    if (m_iCurrentAnimCount >= m_iMaxAnimCount - 1)
-        return;
-
-    if (m_fAnimTime + fTimeDelta > m_fAnimDelay)
-    {
-        m_iCurrentAnimCount++;
-        m_fAnimTime = 0.f;
-    }
-    else
-        m_fAnimTime += fTimeDelta;
+    Update_OnceAnim(fTimeDelta);
 }
 
 CState_Clear* CState_Clear::Create(void* pArg)

@@ -98,9 +98,6 @@ HRESULT CThirdee_Part::Render()
 	m_pVIBufferCom->Render();
 	m_pGraphic_Device->SetRenderState(D3DRS_LIGHTING, FALSE);
 
-	for (auto& Child : m_Childs)
-		Child->Render();
-
 	return S_OK;
 }
 

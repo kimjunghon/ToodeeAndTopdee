@@ -52,14 +52,7 @@ void CState_Dead::Exit(CPlayer* pPlayer)
 
 void CState_Dead::UpdateAnim(_float fTimeDelta)
 {
-
-    if (m_fAnimTime + fTimeDelta > m_fAnimDelay)
-    {
-        m_iCurrentAnimCount++;
-        m_fAnimTime = 0.f;
-    }
-    else
-        m_fAnimTime += fTimeDelta;
+    Update_OnceAnim(fTimeDelta);
 }
 
 CState_Dead* CState_Dead::Create(void* pArg)
